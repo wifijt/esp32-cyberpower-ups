@@ -111,16 +111,31 @@ class CyberPowerUPS : public PollingComponent {
     hid_host_install(&hid_config);
   }
 
+  float calculated_runtime = 0;
+
   void update() override {
-    if (state.updated) {
-        if (watt_sensor) watt_sensor->publish_state(state.watts);
-        if (va_sensor) va_sensor->publish_state(state.va);
-        if (load_sensor) load_sensor->publish_state(state.load);
-        if (battery_sensor) battery_sensor->publish_state(state.battery);
-        if (online_sensor) online_sensor->publish_state(state.is_online);
-        state.updated = false;
-    }
-  }
+      if (state.updated) {
+          // --- Runtime Calculation ---
+          // Assumption: 24V system, 9Ah batteries, 0.8 efficiency factor
+          // Change 216 (24V * 9Ah) if your battery specs differ
+          if (state.watts > 5) { 
+              state.calculated_runtime = (216.0f * 0.8f / (float)state.watts) * 60.0f;
+          } else {
+              state.calculated_runtime = 480; // Default max (8 hours) if no load
+          }
+  
+          // --- Publish to Sensors ---
+          if (watt_sensor) watt_sensor->publish_state(state.watts);
+          if (va_sensor) va_sensor->publish_state(state.va);
+          if (load_sensor) load_sensor->publish_state(state.load);
+          if (battery_sensor) battery_sensor->publish_state(state.battery);
+          
+          // --- Binary Sensor Logic ---
+          if (online_sensor) online_sensor->publish_state(state.is_online);
+          
+          state.updated = false;
+      }
+}
 };
 
 } // namespace cyberpower_ups
