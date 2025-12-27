@@ -11,11 +11,10 @@ esphome:
   framework:
     type: esp-idf
 
-# This tells ESPHome to look inside the CURRENT git repo/folder for components
 external_components:
   - source:
-      type: local
-      path: components
+      type: git
+      url: https://github.com/wifijt/esp32-cyberpower-ups
     components: [ cyberpower_ups ]
 
 # Initialize the UPS Driver
