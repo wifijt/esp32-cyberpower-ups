@@ -18,7 +18,6 @@ class CyberPowerUPS : public PollingComponent {
   float max_watts_ = 810.0f;
   void set_max_watts(float max_watts) { this->max_watts_ = max_watts; }
 
-  // Setters
   void set_watt_sensor(sensor::Sensor *s) { watt_sensor = s; }
   void set_va_sensor(sensor::Sensor *s) { va_sensor = s; }
   void set_load_sensor(sensor::Sensor *s) { load_sensor = s; }
@@ -38,11 +37,9 @@ class CyberPowerUPS : public PollingComponent {
   CyberPowerUPS() : PollingComponent(1000) {}
 
   void setup() override {
-    // 8192 stack size is safer for USB Host operations
     xTaskCreatePinnedToCore(usb_lib_task, "usb_events", 8192, this, 2, NULL, 0);
   }
 
-  // DATA CALLBACK: Handles reports from the UPS
   static void hid_host_interface_callback(hid_host_device_handle_t hid_device_handle,
                                          const hid_host_interface_event_t event,
                                          void *arg) {
@@ -59,7 +56,7 @@ class CyberPowerUPS : public PollingComponent {
     }
   }
 
-  // DRIVER CALLBACK: Handles the initial USB plugin/connection
+  // THIS IS THE HANDSHAKE YOUR REPO CURRENTLY LACKS
   static void hid_host_device_event_callback(hid_host_device_handle_t hid_device_handle,
                                             const hid_host_driver_event_t event,
                                             void *arg) {
@@ -81,16 +78,10 @@ class CyberPowerUPS : public PollingComponent {
         .task_priority = 5,
         .stack_size = 4096,
         .core_id = 0,
-        .callback = hid_host_device_event_callback, // The fix for "Argument Error"
+        .callback = hid_host_device_event_callback, // The fix
         .callback_arg = ups
     };
-    
-    esp_err_t err = hid_host_install(&driver_config);
-    if (err != ESP_OK) {
-        // This will now pass if the callback is provided
-        return; 
-    }
-
+    hid_host_install(&driver_config);
     while (true) {
         hid_host_handle_events(50);
         vTaskDelay(pdMS_TO_TICKS(50));
@@ -99,15 +90,12 @@ class CyberPowerUPS : public PollingComponent {
 
   void update() override {
     if (state.updated) {
-        // Use user-defined max_watts_ for Load %
         state.load = (int)((float)state.watts / max_watts_ * 100.0f);
-
         if (watt_sensor) watt_sensor->publish_state(state.watts);
         if (va_sensor) va_sensor->publish_state(state.va);
         if (load_sensor) load_sensor->publish_state(state.load);
         if (battery_sensor) battery_sensor->publish_state(state.battery);
         if (online_sensor) online_sensor->publish_state(state.is_online);
-
         if (runtime_sensor) {
             if (state.watts > 5) {
                 float minutes = (216.0f * 0.8f / (float)state.watts) * 60.0f;
@@ -120,6 +108,5 @@ class CyberPowerUPS : public PollingComponent {
     }
   }
 };
-
 } // namespace cyberpower_ups
 } // namespace esphome
