@@ -15,7 +15,7 @@
 extern "C" {
 #endif
 
-// --- Main Driver Functions ---
+// --- Core Driver Functions ---
 esp_err_t hid_host_install(const hid_host_driver_config_t *config);
 esp_err_t hid_host_uninstall(void);
 
@@ -23,10 +23,13 @@ esp_err_t hid_host_device_open(hid_host_device_handle_t hid_device_handle,
                                const hid_host_device_config_t *config);
 esp_err_t hid_host_device_close(hid_host_device_handle_t hid_device_handle);
 
+// FIX: Added implicit declaration from logs
+esp_err_t hid_host_handle_events(uint32_t timeout_ms);
+
 esp_err_t hid_host_device_start(hid_host_device_handle_t hid_device_handle);
 esp_err_t hid_host_device_stop(hid_host_device_handle_t hid_device_handle);
 
-// --- Data & Info Functions ---
+// --- Data Functions ---
 esp_err_t hid_host_device_get_raw_input_report_data(hid_host_device_handle_t hid_device_handle,
                                                     uint8_t *data,
                                                     size_t data_len,
@@ -47,7 +50,7 @@ esp_err_t hid_host_get_device_info(hid_host_device_handle_t hid_dev_handle,
 uint8_t *hid_host_get_report_descriptor(hid_host_device_handle_t hid_dev_handle,
                                         size_t *report_desc_len);
 
-// --- Class Requests (Resolves Implicit Declaration Errors) ---
+// --- Class Request Helpers ---
 esp_err_t hid_class_request_get_report(hid_host_device_handle_t hid_dev_handle,
                                        uint8_t type,
                                        uint8_t report_id,
