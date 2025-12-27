@@ -8,6 +8,7 @@ namespace cyberpower_ups {
 
 class CyberPowerUPS : public PollingComponent {
  public:
+  // Sensor Pointers
   sensor::Sensor *watt_sensor = nullptr;
   sensor::Sensor *va_sensor = nullptr;
   sensor::Sensor *load_sensor = nullptr;
@@ -15,10 +16,11 @@ class CyberPowerUPS : public PollingComponent {
   sensor::Sensor *runtime_sensor = nullptr;
   binary_sensor::BinarySensor *online_sensor = nullptr;
 
+  // Variables
   float max_watts_ = 810.0f;
   void set_max_watts(float max_watts) { this->max_watts_ = max_watts; }
 
-  // Setters for Sensors
+  // Setters
   void set_watt_sensor(sensor::Sensor *s) { watt_sensor = s; }
   void set_va_sensor(sensor::Sensor *s) { va_sensor = s; }
   void set_load_sensor(sensor::Sensor *s) { load_sensor = s; }
@@ -37,13 +39,12 @@ class CyberPowerUPS : public PollingComponent {
 
   CyberPowerUPS() : PollingComponent(1000) {}
 
-  // Restored Setup
   void setup() override {
-    // Start the USB background task
+    // We use a high stack size (8192) to prevent the S3 from crashing on USB init
     xTaskCreatePinnedToCore(usb_lib_task, "usb_events", 8192, this, 2, NULL, 0);
   }
 
-  // Restored Callback Logic
+  // HID Interface Callback (Data Handling)
   static void hid_host_interface_callback(hid_host_device_handle_t hid_device_handle,
                                          const hid_host_interface_event_t event,
                                          void *arg) {
@@ -53,7 +54,6 @@ class CyberPowerUPS : public PollingComponent {
 
     if (event == HID_HOST_INTERFACE_EVENT_INPUT_REPORT) {
         if (hid_host_device_get_raw_input_report_data(hid_device_handle, data, 64, &data_len) == ESP_OK) {
-            // CyberPower HID mapping (Typical)
             ups->state.battery = data[1]; 
             ups->state.watts = data[3];   
             ups->state.is_online = (data[2] & 0x01); 
@@ -62,7 +62,7 @@ class CyberPowerUPS : public PollingComponent {
     }
   }
 
-  // Restored Connection Logic
+  // HID Driver Callback (Connection Handling)
   static void hid_host_device_event_callback(hid_host_device_handle_t hid_device_handle,
                                             const hid_host_driver_event_t event,
                                             void *arg) {
@@ -80,17 +80,21 @@ class CyberPowerUPS : public PollingComponent {
   static void usb_lib_task(void *arg) {
     CyberPowerUPS *ups = (CyberPowerUPS *)arg;
     
-    // THE FIX: Full config for the HID Host
+    // Essential Driver Config
     const hid_host_driver_config_t driver_config = {
         .create_background_task = true,
         .task_priority = 5,
         .stack_size = 4096,
         .core_id = 0,
-        .callback = hid_host_device_event_callback, // Crucial
-        .callback_arg = ups                         // Crucial
+        .callback = hid_host_device_event_callback,
+        .callback_arg = ups
     };
 
-    hid_host_install(&driver_config);
+    // Install the driver
+    esp_err_t install_err = hid_host_install(&driver_config);
+    if (install_err != ESP_OK) {
+        ESP_LOGE("HID", "Driver Install Failed: %d", install_err);
+    }
 
     while (true) {
         hid_host_handle_events(50);
@@ -100,6 +104,7 @@ class CyberPowerUPS : public PollingComponent {
 
   void update() override {
     if (state.updated) {
+        // Calculate Load % dynamically
         state.load = (int)((float)state.watts / max_watts_ * 100.0f);
 
         if (watt_sensor) watt_sensor->publish_state(state.watts);
