@@ -5,12 +5,14 @@ substitutions:
 esphome:
   name: ${name}
   friendly_name: ${friendly_name}
-  platform: ESP32
+
+# FIXED: Platform moved to its own block
+esp32:
   board: esp32-s3-devkitc-1
-  # CRITICAL: We need ESP-IDF for USB Host support
   framework:
     type: esp-idf
 
+# FIXED: Explicitly use Git source
 external_components:
   - source:
       type: git
