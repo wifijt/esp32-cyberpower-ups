@@ -72,6 +72,9 @@ text_sensor:
     id: ups_status_text
     icon: "mdi:power-settings"
     lambda: |-
+      if (!id(power_status).has_state()) {
+        return {"Initializing..."};
+      }
       if (id(power_status).state) {
         return {"Mains (AC)"};
       } else {
