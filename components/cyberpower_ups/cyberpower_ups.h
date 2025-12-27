@@ -43,6 +43,7 @@ class CyberPowerUPS : public PollingComponent {
 
   void update() override {
     if (state.updated) {
+        state.load = (int)((float)state.watts / max_watts_ * 100.0f);
         if (watt_sensor) watt_sensor->publish_state(state.watts);
         if (va_sensor) va_sensor->publish_state(state.va);
         if (load_sensor) load_sensor->publish_state(state.load);
