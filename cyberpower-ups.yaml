@@ -27,15 +27,28 @@ cyberpower_ups:
 sensor:
   - platform: cyberpower_ups
     watts:
-      name: "${friendly_name} Output Watts"
-    va:
-      name: "${friendly_name} Output VA"
+      name: "${friendly_name} Power Usage"
+    battery:
+      name: "${friendly_name} Battery Level"
+    runtime:
+      name: "${friendly_name} Estimated Runtime"
     load:
       name: "${friendly_name} Load"
-    battery:
-      name: "${friendly_name} Battery"
 
 binary_sensor:
   - platform: cyberpower_ups
     online_status:
-      name: "${friendly_name} Power Status"
+      id: ups_online
+      name: "${friendly_name} Power Source"
+      device_class: connectivity
+
+text_sensor:
+  - platform: template
+    name: "${friendly_name} Status"
+    lambda: |-
+      if (id(ups_online).state) {
+        return {"Mains (AC)"};
+      } else {
+        return {"Battery Backup"};
+      }
+    update_interval: 5s
