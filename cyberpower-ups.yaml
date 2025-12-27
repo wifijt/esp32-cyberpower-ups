@@ -1,6 +1,7 @@
 substitutions:
   name: "cyberpower-ups"
   friendly_name: "CyberPower UPS"
+  battery_wh: "216.0"
 
 esphome:
   name: ${name}
@@ -28,12 +29,30 @@ sensor:
   - platform: cyberpower_ups
     watts:
       name: "${friendly_name} Output Watts"
+      id: ups_watts
     va:
       name: "${friendly_name} Output VA"
     load:
       name: "${friendly_name} Load"
     battery:
       name: "${friendly_name} Battery"
+      
+  - platform: template
+    name: "${friendly_name} Estimated Runtime"
+    unit_of_measurement: "min"
+    device_class: duration
+    icon: "mdi:timer-outline"
+    # Math: (Battery Watt-Hours * 0.8 efficiency / Current Watts) * 60 minutes 
+    lambda: |-
+      float current_watts = id(ups_watts).state; 
+      if (current_watts > 5.0) {
+        float wh = ${battery_wh};
+        float minutes = (wh * 0.8f / current_watts) * 60.0f;
+        return std::min(minutes, 480.0f); // Cap at 8 hours for display 
+      } else {
+        return 480.0f; 
+      }
+    update_interval: 10s
 
 binary_sensor:
   - platform: cyberpower_ups
