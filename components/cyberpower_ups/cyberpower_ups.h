@@ -40,6 +40,7 @@ class CyberPowerUPS : public PollingComponent {
     xTaskCreatePinnedToCore(usb_lib_task, "usb_events", 8192, this, 2, NULL, 0);
   }
 
+  // 1. DATA CALLBACK (Parses the UPS USB reports)
   static void hid_host_interface_callback(hid_host_device_handle_t hid_device_handle,
                                          const hid_host_interface_event_t event,
                                          void *arg) {
@@ -56,7 +57,7 @@ class CyberPowerUPS : public PollingComponent {
     }
   }
 
-  // THIS IS THE HANDSHAKE YOUR REPO CURRENTLY LACKS
+  // 2. DRIVER CALLBACK (The mandatory "Handshake" your current version is missing)
   static void hid_host_device_event_callback(hid_host_device_handle_t hid_device_handle,
                                             const hid_host_driver_event_t event,
                                             void *arg) {
@@ -78,7 +79,7 @@ class CyberPowerUPS : public PollingComponent {
         .task_priority = 5,
         .stack_size = 4096,
         .core_id = 0,
-        .callback = hid_host_device_event_callback, // The fix
+        .callback = hid_host_device_event_callback, // Linked here
         .callback_arg = ups
     };
     hid_host_install(&driver_config);
@@ -96,6 +97,7 @@ class CyberPowerUPS : public PollingComponent {
         if (load_sensor) load_sensor->publish_state(state.load);
         if (battery_sensor) battery_sensor->publish_state(state.battery);
         if (online_sensor) online_sensor->publish_state(state.is_online);
+
         if (runtime_sensor) {
             if (state.watts > 5) {
                 float minutes = (216.0f * 0.8f / (float)state.watts) * 60.0f;
@@ -108,5 +110,6 @@ class CyberPowerUPS : public PollingComponent {
     }
   }
 };
+
 } // namespace cyberpower_ups
 } // namespace esphome
