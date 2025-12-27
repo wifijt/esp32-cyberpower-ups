@@ -8,13 +8,14 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <stddef.h>
 #include "esp_err.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-// FIX: Match the internal C struct name so pointers match
+// Match the internal C struct name so pointers match
 typedef struct hid_interface *hid_host_device_handle_t;
 
 /**
@@ -80,11 +81,12 @@ typedef struct {
  * @brief HID Device Info
  */
 typedef struct {
-    uint16_t VID;   // FIX: Uppercase to match C file
-    uint16_t PID;   // FIX: Uppercase to match C file
-    char iManufacturer[HID_STR_DESC_MAX_LENGTH]; // FIX: Added missing string buffers
-    char iProduct[HID_STR_DESC_MAX_LENGTH];
-    char iSerialNumber[HID_STR_DESC_MAX_LENGTH];
+    uint16_t VID;
+    uint16_t PID;
+    // FIX: Using wchar_t to match the .c file's expectation for Unicode strings
+    wchar_t iManufacturer[HID_STR_DESC_MAX_LENGTH]; 
+    wchar_t iProduct[HID_STR_DESC_MAX_LENGTH];
+    wchar_t iSerialNumber[HID_STR_DESC_MAX_LENGTH];
     uint8_t sub_class;
     uint8_t proto;
 } hid_host_dev_info_t;
