@@ -8,7 +8,6 @@ namespace cyberpower_ups {
 
 class CyberPowerUPS : public PollingComponent {
  public:
-  // Sensors
   sensor::Sensor *watt_sensor = nullptr;
   sensor::Sensor *va_sensor = nullptr;
   sensor::Sensor *load_sensor = nullptr;
@@ -16,11 +15,10 @@ class CyberPowerUPS : public PollingComponent {
   sensor::Sensor *runtime_sensor = nullptr;
   binary_sensor::BinarySensor *online_sensor = nullptr;
 
-  // Configuration Variables
   float max_watts_ = 810.0f;
   void set_max_watts(float max_watts) { this->max_watts_ = max_watts; }
 
-  // Setters
+  // Setters for Sensors
   void set_watt_sensor(sensor::Sensor *s) { watt_sensor = s; }
   void set_va_sensor(sensor::Sensor *s) { va_sensor = s; }
   void set_load_sensor(sensor::Sensor *s) { load_sensor = s; }
@@ -39,11 +37,13 @@ class CyberPowerUPS : public PollingComponent {
 
   CyberPowerUPS() : PollingComponent(1000) {}
 
+  // Restored Setup
   void setup() override {
+    // Start the USB background task
     xTaskCreatePinnedToCore(usb_lib_task, "usb_events", 8192, this, 2, NULL, 0);
   }
 
-  // --- HID CALLBACK: This is where the magic happens ---
+  // Restored Callback Logic
   static void hid_host_interface_callback(hid_host_device_handle_t hid_device_handle,
                                          const hid_host_interface_event_t event,
                                          void *arg) {
@@ -53,41 +53,53 @@ class CyberPowerUPS : public PollingComponent {
 
     if (event == HID_HOST_INTERFACE_EVENT_INPUT_REPORT) {
         if (hid_host_device_get_raw_input_report_data(hid_device_handle, data, 64, &data_len) == ESP_OK) {
-            // CyberPower HID mapping (standard for most CP units)
-            // Note: Byte offsets may vary by exact model, but these are typical:
+            // CyberPower HID mapping (Typical)
             ups->state.battery = data[1]; 
             ups->state.watts = data[3];   
-            ups->state.is_online = (data[2] & 0x01); // Bit 0 usually indicates AC present
-
-            // TELL THE UPDATE LOOP WE HAVE NEW DATA
+            ups->state.is_online = (data[2] & 0x01); 
             ups->state.updated = true;
         }
+    }
+  }
+
+  // Restored Connection Logic
+  static void hid_host_device_event_callback(hid_host_device_handle_t hid_device_handle,
+                                            const hid_host_driver_event_t event,
+                                            void *arg) {
+    if (event == HID_HOST_DRIVER_EVENT_CONNECTED) {
+        CyberPowerUPS *ups = (CyberPowerUPS *)arg;
+        const hid_host_device_config_t dev_config = {
+            .callback = hid_host_interface_callback,
+            .callback_arg = ups
+        };
+        hid_host_device_open(hid_device_handle, &dev_config);
+        hid_host_device_start(hid_device_handle);
     }
   }
 
   static void usb_lib_task(void *arg) {
     CyberPowerUPS *ups = (CyberPowerUPS *)arg;
     
+    // THE FIX: Full config for the HID Host
     const hid_host_driver_config_t driver_config = {
         .create_background_task = true,
         .task_priority = 5,
-        .stack_size = 8192,
+        .stack_size = 4096,
         .core_id = 0,
-        .callback = NULL,
-        .callback_arg = NULL
+        .callback = hid_host_device_event_callback, // Crucial
+        .callback_arg = ups                         // Crucial
     };
 
     hid_host_install(&driver_config);
 
     while (true) {
-        hid_host_handle_events(100);
-        vTaskDelay(pdMS_TO_TICKS(10));
+        hid_host_handle_events(50);
+        vTaskDelay(pdMS_TO_TICKS(50));
     }
   }
 
   void update() override {
     if (state.updated) {
-        // Calculate Load % using the user-defined max_watts_
         state.load = (int)((float)state.watts / max_watts_ * 100.0f);
 
         if (watt_sensor) watt_sensor->publish_state(state.watts);
