@@ -1,7 +1,7 @@
 substitutions:
   name: "cyberpower-ups"
   friendly_name: "CyberPower UPS"
-  battery_wh: "216.0"
+  battery_wh: "155.0"
 
 esphome:
   name: ${name}
