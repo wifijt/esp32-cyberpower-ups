@@ -1,32 +1,37 @@
 substitutions:
   name: "cyberpower-ups"
   friendly_name: "CyberPower UPS"
+  max_watts: "810" 
 
 esphome:
   name: ${name}
   friendly_name: ${friendly_name}
 
-# FIXED: Platform moved to its own block
 esp32:
   board: esp32-s3-devkitc-1
   framework:
     type: esp-idf
+    sdkconfig_options:
+      CONFIG_ESP_CONSOLE_UART_DEFAULT: "y"
+      CONFIG_ESP_CONSOLE_USB_SERIAL_JTAG: "n"
+      CONFIG_USB_OTG_SUPPORTED: "y"
+      CONFIG_USB_HOST_CONTROL_TRANSFER_MAX_SIZE: "256"
 
-# FIXED: Explicitly use Git source
 external_components:
   - source:
       type: git
       url: https://github.com/wifijt/esp32-cyberpower-ups
     components: [ cyberpower_ups ]
 
-# Initialize the UPS Driver
+# Initialize the UPS Driver with the user-defined wattage
 cyberpower_ups:
   id: ups_device
+  max_watts: ${max_watts}
 
-# Expose the sensors
 sensor:
   - platform: cyberpower_ups
     watts:
+      id: ups_watts
       name: "${friendly_name} Power Usage"
     battery:
       name: "${friendly_name} Battery Level"
@@ -39,12 +44,15 @@ binary_sensor:
   - platform: cyberpower_ups
     online_status:
       id: ups_online
-      name: "${friendly_name} Power Source"
+      name: "${friendly_name} Power Status"
       device_class: connectivity
 
 text_sensor:
+  # This converts the binary 'online' status into friendly text
   - platform: template
     name: "${friendly_name} Status"
+    id: ups_status_text
+    icon: "mdi:power-settings"
     lambda: |-
       if (id(ups_online).state) {
         return {"Mains (AC)"};
