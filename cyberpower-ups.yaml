@@ -2,10 +2,14 @@ substitutions:
   name: "cyberpower-ups"
   friendly_name: "CyberPower UPS"
   battery_wh: "155.0" # real world effective WH of the UPS to align estimated runtime
+  project_version: "1.1.0"
 
 esphome:
   name: ${name}
   friendly_name: ${friendly_name}
+  project:
+    name: "wifijt.cyberpower_ups"
+    version: ${project_version}
 
 # FIXED: Platform moved to its own block
 esp32:
