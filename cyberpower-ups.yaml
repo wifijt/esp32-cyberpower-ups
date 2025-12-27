@@ -1,0 +1,40 @@
+substitutions:
+  name: "cyberpower-ups"
+  friendly_name: "CyberPower UPS"
+
+esphome:
+  name: ${name}
+  friendly_name: ${friendly_name}
+  platform: ESP32
+  board: esp32-s3-devkitc-1
+  # CRITICAL: We need ESP-IDF for USB Host support
+  framework:
+    type: esp-idf
+
+# This tells ESPHome to look inside the CURRENT git repo/folder for components
+external_components:
+  - source:
+      type: local
+      path: components
+    components: [ cyberpower_ups ]
+
+# Initialize the UPS Driver
+cyberpower_ups:
+  id: ups_device
+
+# Expose the sensors
+sensor:
+  - platform: cyberpower_ups
+    watts:
+      name: "${friendly_name} Output Watts"
+    va:
+      name: "${friendly_name} Output VA"
+    load:
+      name: "${friendly_name} Load"
+    battery:
+      name: "${friendly_name} Battery"
+
+binary_sensor:
+  - platform: cyberpower_ups
+    online_status:
+      name: "${friendly_name} Power Status"
