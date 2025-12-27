@@ -2,6 +2,10 @@ import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome.const import CONF_ID
 
+CODEOWNERS = ["@wifijt"]
+PROJECT_URL = "https://github.com/wifijt/esp32-cyberpower-ups"
+VERSION = "1.1.0"
+
 DEPENDENCIES = ['esp32']
 AUTO_LOAD = ['sensor', 'binary_sensor']
 
