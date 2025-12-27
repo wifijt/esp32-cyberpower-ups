@@ -16,6 +16,3 @@ CONFIG_SCHEMA = cv.Schema({
 async def to_code(config):
     var = cg.new_Pvariable(config[CONF_ID])
     await cg.register_component(var, config)
-    
-    # Ensure local C files are compiled
-    cg.add_library("espressif/usb_host_hid", "1.0.4")
