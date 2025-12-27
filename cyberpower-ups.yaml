@@ -36,6 +36,7 @@ sensor:
       name: "${friendly_name} Load"
     battery:
       name: "${friendly_name} Battery"
+      id: ups_batt_pct
       
   - platform: template
     name: "${friendly_name} Estimated Runtime"
@@ -45,9 +46,10 @@ sensor:
     # Math: (Battery Watt-Hours * 0.8 efficiency / Current Watts) * 60 minutes 
     lambda: |-
       float current_watts = id(ups_watts).state; 
+      float pct = id(ups_batt_pct).state / 100.0f; // Convert 0-100 to 0.0-1.0
       if (current_watts > 5.0) {
         float wh = ${battery_wh};
-        float minutes = (wh * 0.8f / current_watts) * 60.0f;
+        float minutes = (wh * 0.8f * pct / current_watts) * 60.0f;
         return std::min(minutes, 480.0f); // Cap at 8 hours for display 
       } else {
         return 480.0f; 
