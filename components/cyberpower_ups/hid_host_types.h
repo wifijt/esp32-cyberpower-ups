@@ -34,15 +34,17 @@ typedef enum {
     HID_HOST_INTERFACE_EVENT_TRANSFER_ERROR
 } hid_host_interface_event_t;
 
-// Define the callback types with _cb_t aliases to match the C code
+// Callback Typedefs (matching the C implementation)
 typedef void (*hid_host_driver_event_callback_t)(hid_host_device_handle_t hid_device_handle,
                                                  const hid_host_driver_event_t event,
                                                  void *arg);
+// Alias used in C file
 typedef hid_host_driver_event_callback_t hid_host_driver_event_cb_t;
 
 typedef void (*hid_host_interface_event_callback_t)(hid_host_device_handle_t hid_device_handle,
                                                     const hid_host_interface_event_t event,
                                                     void *arg);
+// Alias used in C file
 typedef hid_host_interface_event_callback_t hid_host_interface_event_cb_t;
 
 /**
@@ -65,7 +67,7 @@ typedef struct {
     void *callback_arg;                           /**< Interface event callback argument */
 } hid_host_device_config_t;
 
-// --- MISSING STRUCTS ADDED BELOW ---
+// --- MISSING STRUCTURES FIX ---
 
 /**
  * @brief HID Device Parameters
@@ -95,7 +97,7 @@ typedef enum {
     HID_REPORT_PROTOCOL_REPORT = 1
 } hid_report_protocol_t;
 
-// USB HID Standard Definitions & Macros
+// Standard HID Constants
 #define HID_CLASS_DESCRIPTOR_TYPE_HID       0x21
 #define HID_CLASS_DESCRIPTOR_TYPE_REPORT    0x22
 #define HID_CLASS_DESCRIPTOR_TYPE_PHYSICAL  0x23
