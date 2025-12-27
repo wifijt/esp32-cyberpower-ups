@@ -15,7 +15,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/semphr.h"
-#include "usb_host.h"
+#include <usb/usb_host.h>
 
 // HID spinlock
 static portMUX_TYPE hid_lock = portMUX_INITIALIZER_UNLOCKED;
