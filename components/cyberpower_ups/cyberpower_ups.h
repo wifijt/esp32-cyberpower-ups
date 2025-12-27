@@ -37,13 +37,11 @@ class CyberPowerUPS : public PollingComponent {
   CyberPowerUPS() : PollingComponent(1000) {}
 
   void setup() override {
+    // Increase stack to 8192 for the USB task
     xTaskCreatePinnedToCore(usb_lib_task, "usb_events", 8192, this, 2, NULL, 0);
   }
 
-  // 1. DATA CALLBACK (Parses the UPS USB reports)
-  static void hid_host_interface_callback(hid_host_device_handle_t hid_device_handle,
-                                         const hid_host_interface_event_t event,
-                                         void *arg) {
+  static void hid_host_interface_callback(hid_host_device_handle_t hid_device_handle, const hid_host_interface_event_t event, void *arg) {
     CyberPowerUPS *ups = (CyberPowerUPS *)arg;
     uint8_t data[64];
     size_t data_len;
@@ -57,10 +55,7 @@ class CyberPowerUPS : public PollingComponent {
     }
   }
 
-  // 2. DRIVER CALLBACK (The mandatory "Handshake" your current version is missing)
-  static void hid_host_device_event_callback(hid_host_device_handle_t hid_device_handle,
-                                            const hid_host_driver_event_t event,
-                                            void *arg) {
+  static void hid_host_device_event_callback(hid_host_device_handle_t hid_device_handle, const hid_host_driver_event_t event, void *arg) {
     if (event == HID_HOST_DRIVER_EVENT_CONNECTED) {
         CyberPowerUPS *ups = (CyberPowerUPS *)arg;
         const hid_host_device_config_t dev_config = {
@@ -79,10 +74,17 @@ class CyberPowerUPS : public PollingComponent {
         .task_priority = 5,
         .stack_size = 4096,
         .core_id = 0,
-        .callback = hid_host_device_event_callback, // Linked here
+        .callback = hid_host_device_event_callback,
         .callback_arg = ups
     };
-    hid_host_install(&driver_config);
+
+    esp_err_t err = hid_host_install(&driver_config);
+    if (err == ESP_OK) {
+        ESP_LOGI("HID", "!!! HID DRIVER INSTALLED !!!");
+    } else {
+        ESP_LOGE("HID", "Driver install failed: %d", err);
+    }
+
     while (true) {
         hid_host_handle_events(50);
         vTaskDelay(pdMS_TO_TICKS(50));
@@ -97,10 +99,9 @@ class CyberPowerUPS : public PollingComponent {
         if (load_sensor) load_sensor->publish_state(state.load);
         if (battery_sensor) battery_sensor->publish_state(state.battery);
         if (online_sensor) online_sensor->publish_state(state.is_online);
-
         if (runtime_sensor) {
             if (state.watts > 5) {
-                float minutes = (216.0f * 0.8f / (float)state.watts) * 60.0f;
+                float minutes = (172.8f / (float)state.watts) * 60.0f; // Adjusted for 80% DoD
                 runtime_sensor->publish_state(minutes > 480.0f ? 480.0f : minutes);
             } else {
                 runtime_sensor->publish_state(480.0f); 
