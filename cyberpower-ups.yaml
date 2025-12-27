@@ -39,7 +39,7 @@ binary_sensor:
   - platform: cyberpower_ups
     online_status:
       name: "${friendly_name} Power Status"
-    id: power_status
+      id: power_status
 text_sensor:
   # This converts the binary 'online' status into friendly text
   - platform: template
@@ -49,3 +49,7 @@ text_sensor:
     lambda: |-
       if (id(power_status).state) {
         return {"Mains (AC)"};
+      } else {
+        return {"Battery Backup"};
+      }
+    update_interval: 5s
