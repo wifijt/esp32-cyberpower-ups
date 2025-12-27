@@ -39,6 +39,7 @@ binary_sensor:
   - platform: cyberpower_ups
     online_status:
       name: "${friendly_name} Power Status"
+    id: power_status
 text_sensor:
   # This converts the binary 'online' status into friendly text
   - platform: template
@@ -46,5 +47,5 @@ text_sensor:
     id: ups_status_text
     icon: "mdi:power-settings"
     lambda: |-
-      if (id(ups_online).state) {
+      if (id(power_status).state) {
         return {"Mains (AC)"};
