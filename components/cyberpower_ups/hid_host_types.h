@@ -14,8 +14,8 @@
 extern "C" {
 #endif
 
-// Forward declaration
-typedef struct hid_host_device *hid_host_device_handle_t;
+// FIX: Match the internal C struct name so pointers match
+typedef struct hid_interface *hid_host_device_handle_t;
 
 /**
  * @brief HID Host driver event
@@ -34,40 +34,35 @@ typedef enum {
     HID_HOST_INTERFACE_EVENT_TRANSFER_ERROR
 } hid_host_interface_event_t;
 
-// Callback Typedefs (matching the C implementation)
 typedef void (*hid_host_driver_event_callback_t)(hid_host_device_handle_t hid_device_handle,
                                                  const hid_host_driver_event_t event,
                                                  void *arg);
-// Alias used in C file
 typedef hid_host_driver_event_callback_t hid_host_driver_event_cb_t;
 
 typedef void (*hid_host_interface_event_callback_t)(hid_host_device_handle_t hid_device_handle,
                                                     const hid_host_interface_event_t event,
                                                     void *arg);
-// Alias used in C file
 typedef hid_host_interface_event_callback_t hid_host_interface_event_cb_t;
 
 /**
  * @brief HID Host driver configuration
  */
 typedef struct {
-    bool create_background_task;            /**< Create background task */
-    uint32_t task_priority;                 /**< Background task priority */
-    uint32_t stack_size;                    /**< Background task stack size */
-    int core_id;                            /**< Background task core ID */
-    hid_host_driver_event_callback_t callback; /**< Driver event callback */
-    void *callback_arg;                     /**< Driver event callback argument */
+    bool create_background_task;
+    uint32_t task_priority;
+    uint32_t stack_size;
+    int core_id;
+    hid_host_driver_event_callback_t callback;
+    void *callback_arg;
 } hid_host_driver_config_t;
 
 /**
  * @brief HID Host device configuration
  */
 typedef struct {
-    hid_host_interface_event_callback_t callback; /**< Interface event callback */
-    void *callback_arg;                           /**< Interface event callback argument */
+    hid_host_interface_event_callback_t callback;
+    void *callback_arg;
 } hid_host_device_config_t;
-
-// --- MISSING STRUCTURES FIX ---
 
 /**
  * @brief HID Device Parameters
@@ -79,12 +74,17 @@ typedef struct {
     uint8_t proto;
 } hid_host_dev_params_t;
 
+#define HID_STR_DESC_MAX_LENGTH 128
+
 /**
  * @brief HID Device Info
  */
 typedef struct {
-    uint16_t vid;
-    uint16_t pid;
+    uint16_t VID;   // FIX: Uppercase to match C file
+    uint16_t PID;   // FIX: Uppercase to match C file
+    char iManufacturer[HID_STR_DESC_MAX_LENGTH]; // FIX: Added missing string buffers
+    char iProduct[HID_STR_DESC_MAX_LENGTH];
+    char iSerialNumber[HID_STR_DESC_MAX_LENGTH];
     uint8_t sub_class;
     uint8_t proto;
 } hid_host_dev_info_t;
@@ -92,6 +92,13 @@ typedef struct {
 /**
  * @brief HID Protocol Mode
  */
+typedef enum {
+    HID_PROTOCOL_NONE = 0,
+    HID_PROTOCOL_KEYBOARD = 1,
+    HID_PROTOCOL_MOUSE = 2,
+    HID_PROTOCOL_MAX
+} hid_protocol_mode_t;
+
 typedef enum {
     HID_REPORT_PROTOCOL_BOOT = 0,
     HID_REPORT_PROTOCOL_REPORT = 1
@@ -106,7 +113,13 @@ typedef enum {
 #define HID_REPORT_TYPE_OUTPUT      0x02
 #define HID_REPORT_TYPE_FEATURE     0x03
 
-#define HID_STR_DESC_MAX_LENGTH     128
+// Class Specific Requests
+#define HID_CLASS_SPECIFIC_REQ_GET_REPORT   0x01
+#define HID_CLASS_SPECIFIC_REQ_GET_IDLE     0x02
+#define HID_CLASS_SPECIFIC_REQ_GET_PROTOCOL 0x03
+#define HID_CLASS_SPECIFIC_REQ_SET_REPORT   0x09
+#define HID_CLASS_SPECIFIC_REQ_SET_IDLE     0x0A
+#define HID_CLASS_SPECIFIC_REQ_SET_PROTOCOL 0x0B
 
 // HID Descriptor Structure
 typedef struct {
