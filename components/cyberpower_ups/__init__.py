@@ -1,6 +1,9 @@
 import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome.const import CONF_ID
+from esphome.const import __version__ as esphome_version
+if cv.Version.parse(esphome_version) < cv.Version.parse("2025.12.0"):
+    raise cv.Invalid("This component requires ESPHome 2025.12.0 or newer")
 
 CODEOWNERS = ["@wifijt"]
 PROJECT_URL = "https://github.com/wifijt/esp32-cyberpower-ups"
