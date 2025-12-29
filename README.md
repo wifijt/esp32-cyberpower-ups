@@ -12,14 +12,15 @@ An ESPHome custom component for the ESP32-S3 that monitors CyberPower UPS units 
 
 ## Hardware Requirements
 
-This was tested with the Freenove ESP32-S3 8MB Flash with the USB-OTG port
-like this one https://amzn.to/4shbEI1
+This was tested with the Freenove ESP32-S3 8MB Flash with the USB-OTG port, like this one https://amzn.to/4shbEI1
+
 You will also need a USB-A to USB-C cable like this https://amzn.to/3Yfwaet
+
 The UPS it was tested against was a CyberPower 1350VA from Costco
 
 ## Tested versions
 
-This was built on ESPHome 2025.12.4 - but may work with earlier versions
+This was built on ESPHome 2025.12.0 - but may work with earlier versions
 It requires ESP-IDF (5.5.1) and several build options as shown in the example YAML to ensure that the USB-OTG port isn't configured for serial logging
 
 ```yaml
