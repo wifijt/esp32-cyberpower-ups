@@ -1,4 +1,4 @@
-# ESP32 CyberPower UPS Monitor
+# ESPHome - ESP32 CyberPower UPS Monitor
 
 An ESPHome custom component for the ESP32-S3 that monitors CyberPower UPS units via USB HID. This driver allows you to bring real-time power data into Home Assistant without the need for a dedicated NUT server.
 
